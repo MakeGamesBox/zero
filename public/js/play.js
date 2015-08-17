@@ -14,7 +14,6 @@ function getRandomValue(arr) {
 
 function Play(phaserGame) {
   this.game = phaserGame;
-  this.scoreText = "";
   this.score = 0;
   this.lastSpawnTime = 0;
 }
@@ -33,15 +32,18 @@ Play.prototype.preload = function() {
 };
 
 Play.prototype.spawnObject = function(x, y, key) {
-  var obj = this.game.add.sprite(x, y, key);
-
+  var obj = this.objects.create(x, y, key);
   obj.anchor.setTo(0.5, 0.5);
-  obj.scale.setTo(0.1, 0.1);
-
-  this.game.physics.arcade.enable(obj);
-  obj.body.gravity.y = 9.8;
-
+  obj.scale.setTo(0.2, 0.2);
+  obj.body.gravity.y = 16;
   return obj;
+};
+
+Play.prototype.collect = function(player, obj) {
+  console.log("Collected!");
+  obj.kill();
+  this.score += 10;
+  this.scoreText.text = "Score: " + this.score;
 };
 
 Play.prototype.create = function() {
@@ -54,7 +56,7 @@ Play.prototype.create = function() {
     'spaceship');
 
   this.player.anchor.setTo(0.5, 0.5); // Move anchor to center
-  this.player.scale.setTo(0.1, 0.1); // Scale to 10%
+  this.player.scale.setTo(0.2, 0.2); // Scale to 10%
   this.player.rotation = -Math.PI / 2; // Rotate 90deg
 
   // We need to enable physics on the player
@@ -67,6 +69,9 @@ Play.prototype.create = function() {
     fontSize: '18px',
     fill: '#333'
   });
+
+  this.objects = this.game.add.group();
+  this.objects.enableBody = true;
 };
 
 var speed = 100;
@@ -85,6 +90,9 @@ function clamp(x, min, max) {
 var spawnInterval = 1;
 
 Play.prototype.update = function() {
+  // this.game.physics.arcade.collide(this.player, this.objects);
+  this.game.physics.arcade.overlap(this.player, this.objects, this.collect, null, this);
+
   var now = this.game.time.totalElapsedSeconds();
   if (now - this.lastSpawnTime > spawnInterval) {
     this.spawnObject(getRandom(0, this.game.world.width), -8, getRandomValue(keys));
