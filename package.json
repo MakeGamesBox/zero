@@ -1,0 +1,18 @@
+{
+  "name": "box-zero",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Make Games Box Zero",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.4.5"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "danielleswank",
+  "homepage": "https://makegamesbox.com",
+  "engines": {
+    "node": "0.12.x"
+  }
+}
