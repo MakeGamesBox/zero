@@ -64,7 +64,6 @@ Play.prototype.spawnObject = function(x, y, name) {
   obj.name = name;
   obj.anchor.setTo(0.5, 0.5);
   obj.scale.setTo(0.4, 0.4);
-  obj.body.velocity.y = 250;
   return obj;
 };
 
@@ -184,12 +183,17 @@ Play.prototype.update = function() {
 
   this.player.body.velocity.x = xVel * drag;
   this.player.body.velocity.y = yVel * drag;
+  this.player.body.position.y = Math.max(this.player.body.position.y, this.game.world.height - 200);
 
   this.objects.forEach(function(obj) {
     if (!obj.inWorld) {
       obj.kill();
     }
   });
+
+  this.objects.forEachAlive(function(obj) {
+    obj.body.velocity.y = Math.max(-this.player.body.velocity.y * 2, 250);
+  }, this);
 
   var toDestroy = [];
   this.objects.forEachDead(function(obj) {
