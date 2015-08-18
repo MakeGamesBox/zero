@@ -41,6 +41,7 @@ var drag = 0.95;
 function Play(phaserGame) {
   this.game = phaserGame;
   this.score = 0;
+  this.duration = 30;
   this.lastSpawnTime = 0;
   this.bucket = [];
 }
@@ -72,20 +73,37 @@ Play.prototype.checkMatch = function() {
     return;
   }
 
-  console.log(this.bucket);
-
   if (same(this.bucket)) {
+    this.duration += 10;
     this.score += 1000;
     this.bucket.length = 0;
   } else {
-    this.bucket.shift();
+    this.bucket.pop();
+  }
+};
+
+Play.prototype.updateHUD = function() {
+  this.hud.forEach(function(obj) {
+    obj.kill();
+  });
+
+  var startX = this.game.world.width / 2 - 100;
+  for (var i = this.bucket.length - 1; i >= 0; i--) {
+    var obj = this.hud.create(
+      startX + (i * 100),
+      this.game.world.height - 32,
+      this.bucket[i]);
+    obj.anchor.setTo(0.5, 0.5);
+    obj.scale.setTo(0.2, 0.2);
   }
 };
 
 Play.prototype.collect = function(player, obj) {
-  this.bucket.push(obj.name);
+  this.bucket.unshift(obj.name);
+  console.log(this.bucket);
   obj.kill();
 
+  this.updateHUD();
   this.checkMatch();
 
   this.score += 10;
@@ -98,11 +116,11 @@ Play.prototype.create = function() {
   // The player and its settings
   this.player = this.game.add.sprite(
     this.game.world.width / 2, // Center of canvas
-    this.game.world.height - 32, // Bottom of screen
+    this.game.world.height - 64, // Bottom of screen
     'spaceship');
 
   this.player.anchor.setTo(0.5, 0.5); // Move anchor to center
-  this.player.scale.setTo(0.4, 0.4); // Scale to 10%
+  this.player.scale.setTo(0.3, 0.3); // Scale to 10%
   this.player.rotation = -Math.PI / 2; // Rotate 90deg
 
   // We need to enable physics on the player
@@ -111,13 +129,24 @@ Play.prototype.create = function() {
   // Player physics properties
   this.player.body.collideWorldBounds = true;
 
-  this.scoreText = this.game.add.text(16, 16, 'score: 0', {
+  this.scoreText = this.game.add.text(16, 16, 'Score: 0', {
     fontSize: '18px',
     fill: '#333'
   });
 
+  this.countdownText = this.game.add.text(this.game.world.width - 16, 16, 'Countdown: 0', {
+    align: 'right',
+    fontSize: '18px',
+    fill: '#333'
+  });
+  this.countdownText.anchor.setTo(1.0, 0.0); // Move anchor to center
+
+  this.startTime = this.game.time.totalElapsedSeconds();
+
   this.objects = this.game.add.group();
   this.objects.enableBody = true;
+
+  this.hud = this.game.add.group();
 };
 
 Play.prototype.update = function() {
@@ -125,6 +154,10 @@ Play.prototype.update = function() {
   this.game.physics.arcade.overlap(this.player, this.objects, this.collect, null, this);
 
   var now = this.game.time.totalElapsedSeconds();
+
+  var countdown = Math.floor(this.duration - now);
+  this.countdownText.text = "Countdown: " + countdown;
+
   if (now - this.lastSpawnTime > spawnInterval) {
     this.spawnObject(getRandom(0, this.game.world.width), -8, getRandomValue(keys));
     this.lastSpawnTime = now;
@@ -141,5 +174,5 @@ Play.prototype.update = function() {
     x += speed * deltaTime;
   }
 
-  this.player.body.velocity.x = clamp(x * drag, -maxSpeed, maxSpeed);
+  this.player.body.velocity.x = x * drag;
 };
