@@ -100,7 +100,6 @@ Play.prototype.updateHUD = function() {
 
 Play.prototype.collect = function(player, obj) {
   this.bucket.unshift(obj.name);
-  console.log(this.bucket);
   obj.kill();
 
   this.updateHUD();
@@ -163,16 +162,43 @@ Play.prototype.update = function() {
     this.lastSpawnTime = now;
   }
 
-  var x = this.player.body.velocity.x;
+  var xVel = this.player.body.velocity.x;
+  var yVel = this.player.body.velocity.y;
   var deltaTime = this.game.time.physicsElapsed;
 
   if (this.cursors.left.isDown) {
-    x -= speed * deltaTime;
+    xVel -= speed * deltaTime;
   }
 
   if (this.cursors.right.isDown) {
-    x += speed * deltaTime;
+    xVel += speed * deltaTime;
   }
 
-  this.player.body.velocity.x = x * drag;
+  if (this.cursors.up.isDown) {
+    yVel -= speed * deltaTime;
+  }
+
+  if (this.cursors.down.isDown) {
+    yVel += speed * deltaTime;
+  }
+
+  this.player.body.velocity.x = xVel * drag;
+  this.player.body.velocity.y = yVel * drag;
+
+  this.objects.forEach(function(obj) {
+    if (!obj.inWorld) {
+      obj.kill();
+    }
+  });
+
+  var toDestroy = [];
+  this.objects.forEachDead(function(obj) {
+    toDestroy.push(obj);
+  });
+
+  var i = toDestroy.length - 1;
+  while (i >= 0) {
+    toDestroy[i].destroy();
+    i--;
+  }
 };
